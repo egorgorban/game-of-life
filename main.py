@@ -32,32 +32,41 @@ class Board:
     def __init__(self, r, c):
         self._rows = r
         self._columns = c
+        
+        # сетка ячеек
         self._grid = [[Cell() for column_cells in range(self._columns)] for row_cells in range(self._rows)]
 
         self._make_board()
-
+        
+    # создать доску
     def _make_board(self):
         for row in self._grid:
-            for column in row:
+            for cell in row:
                 dead_or_alive = randint(0, 3)
+                # 25% ячеек живы при нулевой итерации
                 if dead_or_alive == 3:
-                    column.set_alive()
-
-    def check_neighbours(self, cur_row, cur_col):
+                    cell.set_alive()
+    
+    # возвращает список соседей текущей ячейки
+    def get_neighbours(self, cur_row, cur_col):
         neighbour_list = []  # список соседей текущей клетки
+        
+        # проверяем предыдущий, текущий и следующий ряд/столбец
         for row in range(-1, 2):
             for col in range(-1, 2):
+               
                 neighbour_row = cur_row + row
                 neighbour_col = cur_col + col
 
                 is_neighbour = True
-
+                
+                # клетка не является соседом, если это текущая клетка
                 if neighbour_row == cur_row and neighbour_col == cur_col:
                     is_neighbour = False
-
+                    
+                # а также, если текущая клетка - граничная, мы не можем рассматривать клетки за пределами сетки
                 if neighbour_row < 0 or neighbour_row >= self._rows:
                     is_neighbour = False
-
                 if neighbour_col < 0 or neighbour_col >= self._columns:
                     is_neighbour = False
 
@@ -65,28 +74,33 @@ class Board:
                     neighbour_list.append(self._grid[neighbour_row][neighbour_col])
         return neighbour_list
 
+    # отрисовываем доску
     def draw_board(self):
         for row in self._grid:
             for col in row:
                 print(col.print_cell(), end='  ')
             print()
 
+    # обновляем доску - генерируем следующее поколение
     def renew_board(self):
         print('new generation')
-        to_live = []
-        to_kill = []
+        to_live = []  # список ячеек, которые должны быть живыми в новом поколении
+        to_kill = []  # список ячеек, которые должны быть мёртвыми в новом поколении
 
         for row in range(len(self._grid)):
             for col in range(len(self._grid[row])):
-
-                get_neighbours = self.check_neighbours(row, col)
+                # получаем список соседей для каждой ячейки
+                get_neighbours = self.get_neighbours(row, col)
                 alive_neighbours = []
-
+                
+                # и смотрим количество живых соседей
                 for _cell in get_neighbours:
                     if _cell.is_alive():
                         alive_neighbours.append(_cell)
 
                 cur_cell = self._grid[row][col]
+                
+                # реализуем работу автомата
                 status_cell = cur_cell.is_alive()
 
                 if status_cell:
@@ -94,15 +108,14 @@ class Board:
                         to_kill.append(cur_cell)
                     else:
                         to_live.append(cur_cell)
-
                 else:
                     if len(alive_neighbours) == 3:
                         to_live.append(cur_cell)
-
-        for cells in to_live:
-            cells.set_alive()
-        for cells in to_kill:
-            cells.set_dead()
+        # обновляем информацию для всех клеток
+        for cell in to_live:
+            cell.set_alive()
+        for cell in to_kill:
+            cell.set_dead()
 
     # -------------------------------------------------------------------
 
